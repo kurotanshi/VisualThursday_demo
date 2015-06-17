@@ -195,7 +195,7 @@ function draw(data){
 
       if( feature_type === 'Point' ){
         var str = '<div style="line-height: 200%;">'+ e.feature.getProperty("name") + "</div>";
-        str += '<div style="line-height: 200%;"> value = ' + e.feature.getProperty("valueCount") + "</div>";
+        str += '<div style="line-height: 200%;"> 可用車位 = ' + e.feature.getProperty("valueCount") + "</div>";
         infoWindow.setContent( str );
       }
 
@@ -297,9 +297,6 @@ function draw(data){
 
   map.data.addListener('click', function(event) {
     //show an infowindow on click
-    console.log( event );
-
-    infoWindow.setContent('<div> value = ' + event.feature.getProperty("valueCount") + "</div>");
     var anchor = new google.maps.MVCObject();
     anchor.set("position", event.latLng);
     infoWindow.open(map, anchor);
