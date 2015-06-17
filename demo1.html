@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <style type="text/css">
+    .gmap{ display: block; width: 1280px; height: 700px; }
+    .stations, .stations svg { position: absolute; }
+    .stations svg { width: 700px; height: 700px; padding-right: 100px; font: 12px sans-serif; }
+    .stations circle { stroke: black; stroke-width: 1px; }
+  </style>
+</head>
+<body>
+
+  <div class="gmap" id="map-canvas"></div>
+
+  <script src="http://maps.googleapis.com/maps/api/js"></script>
+  <script src='http://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js'></script>
+
+<script>
+var map;
+var overlay = new google.maps.OverlayView();
+var sta_in = [], sta_out = [], mrtData;
+
+function initialize() {
+  var mapOptions = { zoom: 14, center: new google.maps.LatLng(25.03326, 121.518168) };
+  map = new google.maps.Map( document.getElementById('map-canvas') , mapOptions);
+}
+
+initialize();
+
+// load data
+d3.csv("https://dl.dropboxusercontent.com/u/12537630/mrt.csv", function(data){
+  mrtData = data;
+
+  d3.json("https://dl.dropboxusercontent.com/u/12537630/mrt-in-april.json",  function(error, json) {
+    sta_in = json.result.results;
+    if( sta_in.length > 0 && sta_out.length > 0 ) { drawMap(data); }
+  });
+
+  d3.json("https://dl.dropboxusercontent.com/u/12537630/mrt-out-april.json",  function(error, json) {
+    sta_out = json.result.results;
+    if( sta_in.length > 0 && sta_out.length > 0 ) { drawMap(data); }
+  });
+});
+
+
+function drawMap(){
+
+// 設定圖形長寬, 半徑
+  var width = 35, height = 40, radius = Math.min(width, height) / 2 + 3;
+
+  // color
+  var color = d3.scale.category10();
+  var pie = d3.layout.pie().sort(null);
+
+  var arc = d3.svg.arc()
+    .innerRadius(0)
+    .outerRadius(radius);
+
+  // Add the container when the overlay is added to the map.
+  overlay.onAdd = function() {
+    var layer = d3.select(this.getPanes().overlayMouseTarget).append("div")
+        .attr("class", "stations");
+
+    overlay.draw = function() {
+      var projection = this.getProjection(),
+          padding = 16;
+
+      var marker = layer.selectAll("svg")
+          .data(d3.entries(mrtData))
+          .each(transform)
+          .enter()
+            .append("svg")
+            .each(transform)
+            .attr({
+              'class': "marker",
+              "width": width,
+              "height": height,
+              "transform": "translate(" + width / 2 + "," + height / 2 + ")",
+            });
+
+    // g for group, Enter.
+    var g = marker.selectAll("g")
+        .data(function(d, i){
+          return pie([parseInt(sta_in[0][d.value.name].replace(',', ''), 10), parseInt(sta_out[0][d.value.name].replace(',', ''), 10)]);
+        })
+        .enter()
+        .append("g");
+
+    // Update - path
+    var path = g.append("path")
+        .attr({
+          "fill": function(d, i) { return color(i); },
+          "d": arc,
+          "transform": "translate(" + width / 2 + "," + height / 2 + ")"
+        });
+
+      // 加入標籤
+      marker.append("text")
+          .attr("x", padding + 7)
+          .attr("y", padding)
+          .attr("dy", ".31em")
+          .text(function(d) { return d.value.name; });
+
+      function transform(d) {
+        d = new google.maps.LatLng(d.value.lat, d.value.lng);
+        d = projection.fromLatLngToDivPixel(d);
+        return d3.select(this)
+            .style("left", (d.x - padding) + "px")
+            .style("top", (d.y - padding) + "px");
+      }
+
+    };
+
+  };
+
+  // Bind our overlay to the map…
+  overlay.setMap(map);
+
+}
+</script>
