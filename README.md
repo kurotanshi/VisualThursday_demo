@@ -1,4 +1,4 @@
-# VisualThursday_demo
+# VisualThursday Demo
 Demo for Visual Thursday ( D3.js Taipei Meetup )
 
 Online Demo:  http://kurotanshi.github.io/VisualThursday_demo/
