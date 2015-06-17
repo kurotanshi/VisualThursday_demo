@@ -42,7 +42,7 @@ d3.json("data/history.json", function(data) {
   initialize();
   var features = map.data.addGeoJson(line);
 
-  document.querySelector("#range").addEventListener("change", function(){
+  $('#range').on("change", function(){
     var meter = this.value;
     document.querySelector(".distance").innerHTML = meter;
     var along = turf.along(line, meter / 1000, 'kilometers');
