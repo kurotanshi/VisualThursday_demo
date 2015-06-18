@@ -19,7 +19,7 @@
 <script>
 var map;
 var overlay = new google.maps.OverlayView();
-var sta_in = [], sta_out = [], mrtData;
+var paths = [];
 
 function initialize() {
   map = new google.maps.Map(document.getElementById('map-canvas'), {
@@ -30,7 +30,8 @@ function initialize() {
 }
 
 d3.json("data/history.json", function(json) {
-  mapdraw(json);
+  paths.push( makePath(json) );
+  mapdraw();
 });
 
 var GDouglasPeucker = function(source, kink){
@@ -140,21 +141,20 @@ var GDouglasPeucker = function(source, kink){
   return r;
 };
 
-function mapdraw(json) {
+function makePath(json){
   var feature = json.features;
 
   var gArr = [];
   for (var i = 0; i < feature[0].geometry.coordinates.length; i++) {
     gArr.push(new google.maps.LatLng(feature[0].geometry.coordinates[i][1], feature[0].geometry.coordinates[i][0]));
   }
-  console.log( gArr.length );
   var tmp = GDouglasPeucker(gArr, 25);
-  console.log( tmp.length );
+  return tmp;
+}
 
+function mapdraw() {
   initialize();
 
-  // Google Map OverLay
-  var overlay = new google.maps.OverlayView();
   overlay.onAdd = function () {
 
     var layer = d3.select(this.getPanes().overlayLayer).append("div").attr("class", "SvgOverlay");
@@ -199,9 +199,12 @@ function mapdraw(json) {
     overlay.draw = function () {
       svg.selectAll("path").remove();
 
-      mask.append("path")
+      mask.selectAll('path')
+        .data( paths )
+        .enter()
+        .append("path")
         .attr({
-          "d": line( tmp ),
+          "d": function(d){ return line( d ); },
           "stroke-width": 25 * Math.pow(2, map.getZoom() - 14),
           "fill": "none",
           "stroke": "black",
