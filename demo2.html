@@ -179,7 +179,7 @@ function mapdraw() {
     var googleMapProjection = function (coordinates) {
       var pixelCoordinates = overlayProjection.fromLatLngToDivPixel(coordinates);
       return [pixelCoordinates.x + 4000, pixelCoordinates.y + 4000];
-    }
+    };
 
     // 路經
     path = d3.geo.path().projection(googleMapProjection);　
